@@ -4,29 +4,35 @@ const path = require('path');
 let mainWindow;
 let appWindow;
 
+// ✅ Disable GPU acceleration (recommended on Raspberry Pi Lite)
+app.disableHardwareAcceleration();
+
 // ✅ Allow mic, speech, and media input in Electron Chromium
 app.commandLine.appendSwitch('enable-speech-dispatcher');
 app.commandLine.appendSwitch('enable-media-stream');
-app.commandLine.appendSwitch('use-fake-ui-for-media-stream'); // auto-grant mic permissions (helpful on RPi)
+app.commandLine.appendSwitch('use-fake-ui-for-media-stream'); // auto-grant mic permissions
 
 function createWindow() {
     mainWindow = new BrowserWindow({
         width: 1920,
         height: 1080,
-        kiosk: true,
+        kiosk: true,              // Smart TV mode
+        fullscreen: true,         // Extra backup
+        frame: false,             // No borders or title bar
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false,
-            webSecurity: false, // allow local file access
-            allowRunningInsecureContent: true, // useful if loading local assets
-            autoplayPolicy: 'no-user-gesture-required', // ✅ enable autoplay for TTS
+            webSecurity: false,                 // allow local file access
+            allowRunningInsecureContent: true,  // useful for loading local/remote mixed content
+            autoplayPolicy: 'no-user-gesture-required',
             sandbox: false
         },
     });
 
+    // Load main home screen
     mainWindow.loadFile(path.join(__dirname, 'public', 'index.html'));
 
-    // LAUNCH APP
+    // Handle app launch from front-end
     ipcMain.on('launch-app', (event, url) => {
         if (appWindow && !appWindow.isDestroyed()) {
             appWindow.close();
@@ -34,6 +40,7 @@ function createWindow() {
 
         appWindow = new BrowserWindow({
             fullscreen: true,
+            frame: false,
             alwaysOnTop: true,
             webPreferences: {
                 nodeIntegration: false,
@@ -48,7 +55,7 @@ function createWindow() {
 
         appWindow.loadURL(url);
 
-        // Inject CSS + focus + simulate input
+        // Inject CSS + focus + simulate key input
         appWindow.webContents.on('did-finish-load', () => {
             appWindow.webContents.insertCSS('body, * { cursor: none !important; }');
             appWindow.webContents.focus();
@@ -59,7 +66,7 @@ function createWindow() {
         });
     });
 
-    // ESC to return home
+    // ESC key returns to main menu
     globalShortcut.register('Escape', () => {
         if (appWindow && !appWindow.isDestroyed()) {
             appWindow.close();
@@ -68,7 +75,7 @@ function createWindow() {
         }
     });
 
-    // Volume shortcuts
+    // Volume shortcuts (send event to renderer)
     globalShortcut.register('[', () => {
         mainWindow.webContents.send('volume-control', 'decrease');
     });
