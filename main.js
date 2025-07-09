@@ -4,18 +4,19 @@ const path = require('path');
 let mainWindow;
 let appWindow;
 
-// ✅ Disable GPU acceleration (recommended on Raspberry Pi Lite)
-app.disableHardwareAcceleration();
 
-// ✅ Allow mic, speech, and media input in Electron Chromium
+app.commandLine.appendSwitch('ignore-gpu-blacklist');
+app.commandLine.appendSwitch('enable-gpu-rasterization');
+app.commandLine.appendSwitch('enable-zero-copy');
 app.commandLine.appendSwitch('enable-speech-dispatcher');
 app.commandLine.appendSwitch('enable-media-stream');
-app.commandLine.appendSwitch('use-fake-ui-for-media-stream'); // auto-grant mic permissions
+app.commandLine.appendSwitch('use-fake-ui-for-media-stream');
+ // auto-grant mic permissions
 
 function createWindow() {
     mainWindow = new BrowserWindow({
-        width: 1920,
-        height: 1080,
+        width: 1280,
+        height: 720,
         kiosk: true,              // Smart TV mode
         fullscreen: true,         // Extra backup
         frame: false,             // No borders or title bar
