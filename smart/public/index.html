@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart TV Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            color: white;
+            overflow-x: hidden;
+            cursor: none;
+        }
+
+        .tv-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        body.wake-glow::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            border: 8px solid rgba(78, 205, 196, 0.8);
+            box-shadow: 0 0 50px 30px rgba(78, 205, 196, 0.5);
+            border-radius: 30px;
+            animation: glowPulse 1s ease-in-out;
+            z-index: 9999;
+        }
+
+        @keyframes glowPulse {
+            0% {
+                opacity: 0;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+            }
+        }
+
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .time-widget {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 5px;
+        }
+
+        .time {
+            font-size: 24px;
+            font-weight: 300;
+        }
+
+        .date {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+
+        .hero-section {
+            text-align: center;
+            padding: 60px 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .hero-title {
+            font-size: 48px;
+            font-weight: 300;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 18px;
+            opacity: 0.8;
+            margin-bottom: 40px;
+        }
+
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .app-card {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            backdrop-filter: blur(15px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .app-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.1));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .app-card:hover::before {
+            opacity: 1;
+        }
+
+        .app-card:hover {
+            transform: translateY(-10px) scale(1.05);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .app-card.selected {
+            border-color: #4ecdc4;
+            box-shadow: 0 0 30px rgba(78, 205, 196, 0.4);
+        }
+
+        .app-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .app-name {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        .app-description {
+            font-size: 14px;
+            opacity: 0.7;
+            line-height: 1.4;
+        }
+
+        .netflix {
+            background: linear-gradient(135deg, #e50914, #b20710);
+        }
+
+        .prime {
+            background: linear-gradient(135deg, #00a8e1, #0073a8);
+        }
+
+        .youtube {
+            background: linear-gradient(135deg, #ff0000, #cc0000);
+        }
+
+        .disney {
+            background: linear-gradient(135deg, #113ccf, #0a2b9c);
+        }
+
+        .hulu {
+            background: linear-gradient(135deg, #1ce783, #16b86a);
+        }
+
+        .spotify {
+            background: linear-gradient(135deg, #1ed760, #1aa851);
+        }
+
+        .twitch {
+            background: linear-gradient(135deg, #9146ff, #7b2cbf);
+        }
+
+        .plex {
+            background: linear-gradient(135deg, #e5a00d, #cc8f00);
+        }
+
+        .footer {
+            padding: 20px 40px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .footer-text {
+            font-size: 14px;
+            opacity: 0.6;
+        }
+
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .loading.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #4ecdc4;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .navigation-hint {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 14px;
+            opacity: 0.8;
+            backdrop-filter: blur(10px);
+        }
+
+        @media (max-width: 768px) {
+            .apps-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 20px;
+            }
+
+            .hero-title {
+                font-size: 36px;
+            }
+
+            .main-content {
+                padding: 20px;
+            }
+
+            .header {
+                padding: 15px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="tv-container">
+        <div class="header">
+            <div class="logo">🏠 Smart TV OS</div>
+            <div class="time-widget">
+                <div class="time" id="currentTime">00:00</div>
+                <div class="date" id="currentDate">Loading...</div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="hero-section">
+                <h1 class="hero-title">Welcome to Your Entertainment Hub</h1>
+                <p class="hero-subtitle">Choose your favorite streaming service and enjoy</p>
+            </div>
+
+            <div class="apps-grid">
+                <div class="app-card netflix" data-url="https://www.netflix.com" data-name="Netflix">
+                    <div class="app-icon">📺</div>
+                    <div class="app-name">Netflix</div>
+                    <div class="app-description">Watch TV shows and movies</div>
+                </div>
+
+                <div class="app-card prime" data-url="https://www.primevideo.com" data-name="Prime Video">
+                    <div class="app-icon">🎬</div>
+                    <div class="app-name">Prime Video</div>
+                    <div class="app-description">Amazon Prime streaming</div>
+                </div>
+
+                <div class="app-card youtube" data-url="https://www.youtube.com/tv" data-name="YouTube">
+                    <div class="app-icon">▶️</div>
+                    <div class="app-name">YouTube</div>
+                    <div class="app-description">Videos, music, and more</div>
+                </div>
+
+                <div class="app-card disney" data-url="https://www.disneyplus.com" data-name="Disney+">
+                    <div class="app-icon">🏰</div>
+                    <div class="app-name">Disney+</div>
+                    <div class="app-description">Disney, Marvel, Star Wars</div>
+                </div>
+
+                <div class="app-card hulu" data-url="https://www.hulu.com" data-name="Hulu">
+                    <div class="app-icon">🎭</div>
+                    <div class="app-name">Hulu</div>
+                    <div class="app-description">Stream TV and movies</div>
+                </div>
+
+                <div class="app-card spotify" data-url="https://open.spotify.com" data-name="Spotify">
+                    <div class="app-icon">🎵</div>
+                    <div class="app-name">Spotify</div>
+                    <div class="app-description">Music and podcasts</div>
+                </div>
+
+                <div class="app-card twitch" data-url="https://www.twitch.tv" data-name="Twitch">
+                    <div class="app-icon">🎮</div>
+                    <div class="app-name">Twitch</div>
+                    <div class="app-description">Live gaming streams</div>
+                </div>
+
+                <div class="app-card plex" data-url="https://app.plex.tv" data-name="Plex">
+                    <div class="app-icon">🎪</div>
+                    <div class="app-name">Plex</div>
+                    <div class="app-description">Personal media server</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="footer-text">Use arrow keys to navigate • Press Enter to select • Escape to return home</div>
+        </div>
+    </div>
+
+    <div class="loading" id="loadingScreen">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <div class="navigation-hint">
+        🎯 TV Mode Active
+    </div>
+
+    <script>
+
+
+        const { ipcRenderer } = require('electron');
+
+        class TVInterface {
+            constructor() {
+                this.selectedIndex = 0;
+                this.apps = document.querySelectorAll('.app-card');
+                this.openTabs = new Set();
+                this.isTabOpen = false;
+                this.originalTab = null;
+                this.init();
+            }
+
+            init() {
+                this.updateTime();
+                this.setupEventListeners();
+                this.selectApp(0);
+                setInterval(() => this.updateTime(), 1000);
+            }
+
+            updateTime() {
+                const now = new Date();
+                const time = now.toLocaleTimeString('en-US', {
+                    hour12: false,
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                const date = now.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+
+                document.getElementById('currentTime').textContent = time;
+                document.getElementById('currentDate').textContent = date;
+            }
+
+            setupEventListeners() {
+                // Keyboard navigation
+                document.addEventListener('keydown', (e) => this.handleKeyDown(e));
+
+                // Mouse support
+                this.apps.forEach((app, index) => {
+                    app.addEventListener('click', () => this.launchApp(index));
+                    app.addEventListener('mouseenter', () => this.selectApp(index));
+                });
+
+                // Handle tab visibility changes
+                document.addEventListener('visibilitychange', () => {
+                    if (!document.hidden && this.isTabOpen) {
+                        // User returned to the TV interface
+                        this.handleReturnHome();
+                    }
+                });
+
+                // Handle focus events
+                window.addEventListener('focus', () => {
+                    if (this.isTabOpen) {
+                        this.handleReturnHome();
+                    }
+                });
+            }
+
+            handleKeyDown(e) {
+                switch (e.key) {
+                    case 'ArrowRight':
+                        e.preventDefault();
+                        this.navigateRight();
+                        break;
+                    case 'ArrowLeft':
+                        e.preventDefault();
+                        this.navigateLeft();
+                        break;
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        this.navigateDown();
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        this.navigateUp();
+                        break;
+                    case 'Enter':
+                        e.preventDefault();
+                        this.launchApp(this.selectedIndex);
+                        break;
+                    case 'Escape':
+                        e.preventDefault();
+                        this.handleReturnHome();
+                        break;
+                }
+            }
+
+            navigateRight() {
+                const cols = this.getGridColumns();
+                const currentRow = Math.floor(this.selectedIndex / cols);
+                const currentCol = this.selectedIndex % cols;
+
+                if (currentCol < cols - 1 && this.selectedIndex + 1 < this.apps.length) {
+                    this.selectApp(this.selectedIndex + 1);
+                }
+            }
+
+            navigateLeft() {
+                const cols = this.getGridColumns();
+                const currentCol = this.selectedIndex % cols;
+
+                if (currentCol > 0) {
+                    this.selectApp(this.selectedIndex - 1);
+                }
+            }
+
+            navigateDown() {
+                const cols = this.getGridColumns();
+                const newIndex = this.selectedIndex + cols;
+
+                if (newIndex < this.apps.length) {
+                    this.selectApp(newIndex);
+                }
+            }
+
+            navigateUp() {
+                const cols = this.getGridColumns();
+                const newIndex = this.selectedIndex - cols;
+
+                if (newIndex >= 0) {
+                    this.selectApp(newIndex);
+                }
+            }
+
+            getGridColumns() {
+                const grid = document.querySelector('.apps-grid');
+                const gridStyle = window.getComputedStyle(grid);
+                const cols = gridStyle.getPropertyValue('grid-template-columns').split(' ').length;
+                return cols;
+            }
+
+            selectApp(index) {
+                this.apps.forEach(app => app.classList.remove('selected'));
+                this.apps[index].classList.add('selected');
+                this.selectedIndex = index;
+
+                // Scroll into view if needed
+                this.apps[index].scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+            }
+
+            launchApp(index) {
+                const app = this.apps[index];
+                const url = app.dataset.url;
+                const name = app.dataset.name;
+
+                this.showLoading();
+
+                setTimeout(() => {
+                    try {
+                        const { ipcRenderer } = require('electron');
+                        ipcRenderer.send('launch-app', url);
+
+                        this.isTabOpen = true;
+                        this.originalTab = window;
+                    } catch (err) {
+                        console.error('Electron IPC call failed:', err);
+                    } finally {
+                        this.hideLoading();
+                    }
+                }, 500);
+            }
+
+
+            monitorNewWindow(newWindow) {
+                const checkClosed = setInterval(() => {
+                    if (newWindow.closed) {
+                        clearInterval(checkClosed);
+                        this.handleReturnHome();
+                    }
+                }, 1000);
+            }
+
+            handleReturnHome() {
+                this.isTabOpen = false;
+
+                // Close any open tabs
+                this.openTabs.forEach(tab => {
+                    if (tab && !tab.closed) {
+                        tab.close();
+                    }
+                });
+                this.openTabs.clear();
+
+                // Focus back on the main interface
+                window.focus();
+
+                // Optional: Exit fullscreen
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                }
+
+                // Re-select the current app
+                this.selectApp(this.selectedIndex);
+            }
+
+            showLoading() {
+                document.getElementById('loadingScreen').classList.add('show');
+            }
+
+            hideLoading() {
+                document.getElementById('loadingScreen').classList.remove('show');
+            }
+        }
+
+        // Initialize the TV interface
+        const tvInterface = new TVInterface();
+        // Additional utility functions
+        function enterKioskMode() {
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen();
+            }
+        }
+
+        function exitKioskMode() {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
+
+        // Add fullscreen toggle on F11 or double-click
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'F11') {
+                e.preventDefault();
+                if (document.fullscreenElement) {
+                    exitKioskMode();
+                } else {
+                    enterKioskMode();
+                }
+            }
+        });
+
+        // Double-click to toggle fullscreen
+        document.addEventListener('dblclick', () => {
+            if (document.fullscreenElement) {
+                exitKioskMode();
+            } else {
+                enterKioskMode();
+            }
+        });
+
+    </script>
+    <!-- AI Assistant Overlay -->
+    <div id="ai-overlay"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,15,23,0.92); z-index:9999; backdrop-filter: blur(8px); padding:40px; overflow-y:auto; font-size:20px;">
+        <div id="ai-chat" style="max-width:800px; margin:0 auto; display:flex; flex-direction:column; gap:16px;"></div>
+        <div id="ai-status" style="text-align:center; margin-top:20px; font-size:18px; opacity:0.6;"></div>
+    </div>
+    <audio id="beep-sound" src="beep.mp3" preload="auto"></audio>
+    <script src="assistant.js"></script>
+
+</body>
+
+</html>
